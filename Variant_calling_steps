@@ -1,0 +1,2 @@
+### Step 1, trim reads
+for i in $(ls | grep gz | grep R1); do id=$(echo $i | cut -c1-7); sbatch -p shared  -t 7200 --mem=4000 --wrap="java -jar /n/home03/msenghore/Trimmomatic-0.39/trimmomatic-0.39.jar PE -threads 4 -phred33 -trimlog $id.log -basein $i -baseout $id ILLUMINACLIP:TruSeq3-SE:2:30:10 SLIDINGWINDOW:10:20 MINLEN:31 TRAILING:20"; done | less -S
