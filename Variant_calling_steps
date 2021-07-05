@@ -1,2 +1,7 @@
 ### Step 1, trim reads
 for i in $(ls | grep gz | grep R1); do id=$(echo $i | cut -c1-7); sbatch -p shared  -t 7200 --mem=4000 --wrap="java -jar /n/home03/msenghore/Trimmomatic-0.39/trimmomatic-0.39.jar PE -threads 4 -phred33 -trimlog $id.log -basein $i -baseout $id ILLUMINACLIP:TruSeq3-SE:2:30:10 SLIDINGWINDOW:10:20 MINLEN:31 TRAILING:20"; done | less -S
+
+### Map reads to reference using bwa-mem
+ls | grep P | xargs -n 2 > Read_pairs.list
+module load bwa/0.7.17-fasrc01 
+while read -r i; do d=$(echo $i | cut -c1-7); sbatch -p shared  -t 7200 --mem=4000 --wrap="bwa mem USA300_ISMMS1.fasta $i > $d.sam" ; done < "Read_pairs.list"
