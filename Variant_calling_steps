@@ -5,3 +5,7 @@ for i in $(ls | grep gz | grep R1); do id=$(echo $i | cut -c1-7); sbatch -p shar
 ls | grep P | xargs -n 2 > Read_pairs.list
 module load bwa/0.7.17-fasrc01 
 while read -r i; do d=$(echo $i | cut -c1-7); sbatch -p shared  -t 7200 --mem=4000 --wrap="bwa mem USA300_ISMMS1.fasta $i > $d.sam" ; done < "Read_pairs.list"
+
+## Convert SAM to Bam
+for i in *.sam; do
+IFS='.' read -r -a f <<< "$i"; sbatch -p shared  -t 7200 --mem=4000 --wrap="samtools view -S -b $i > $f.bam"; done
