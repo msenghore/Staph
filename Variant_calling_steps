@@ -9,3 +9,14 @@ while read -r i; do d=$(echo $i | cut -c1-7); sbatch -p shared  -t 7200 --mem=40
 ## Convert SAM to Bam
 for i in *.sam; do
 IFS='.' read -r -a f <<< "$i"; sbatch -p shared  -t 7200 --mem=4000 --wrap="samtools view -S -b $i > $f.bam"; done
+
+### sort the bamfile
+for i in *.bam; do
+IFS='.' read -r -a f <<< "$i"; sbatch -p shared  -t 7200 --mem=4000 --wrap="samtools sort $i -o $f.s.bam"; done
+
+### Remove reads under 30 bases long:
+#step 1: 
+for i in *.sam; do IFS='.' read -r -a f <<< "$i"; echo "samtools view -h $f.s.bam | awk 'length($10) > 30 || $1 ~ /^@/'  | samtools view -bS > $f.s.f.bam"; done > Drop_under30base_records.txt
+#step 2: manually edit the text file to add the $1, which is lost is code above
+
+while read -r i; do sbatch -p shared  -t 7200 --mem=4000 --wrap="$i"; done < "Drop_under30base_records.txt"
