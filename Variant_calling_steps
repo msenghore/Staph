@@ -24,3 +24,12 @@ while read -r i; do sbatch -p shared  -t 7200 --mem=4000 --wrap="$i"; done < "Dr
 ### Add read groups
 for i in *.f.bam; do
 IFS='.' read -r -a f <<< "$i"; sbatch -p shared  -t 7000 --mem=4000 --wrap="gatk AddOrReplaceReadGroups --INPUT $i --OUTPUT $f.s.f.rg.bam --RGLB library1 --RGPL illumina --RGPU unit1 --RGSM $f"; done
+
+
+### Add one liner to remove unmapped reads and reads less that 30 quality
+for i in *rg.bam; do
+IFS='.' read -r -a f <<< "$i"; sbatch -p shared  -t 7200 --mem=4000 --wrap="samtools view -F 0x04 -q 30 -b $i > $f.s.f.rg.q30.bam"; done
+
+#Mark duplicates in the sorted bam files with read groups assigned
+for i in *rg.bam; do
+IFS='.' read -r -a f <<< "$i"; sbatch -p shared  -t 7200 --mem=4000 --wrap="gatk MarkDuplicates -I $i -O $f.marked.bam -M $f.metrics"; done
