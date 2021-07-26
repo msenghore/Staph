@@ -31,5 +31,5 @@ for i in *rg.bam; do
 IFS='.' read -r -a f <<< "$i"; sbatch -p shared  -t 7200 --mem=4000 --wrap="samtools view -F 0x04 -q 30 -b $i > $f.s.f.rg.q30.bam"; done
 
 #Mark duplicates in the sorted bam files with read groups assigned
-for i in *rg.bam; do
+for i in *rg.q30.bam; do
 IFS='.' read -r -a f <<< "$i"; sbatch -p shared  -t 7200 --mem=4000 --wrap="gatk MarkDuplicates -I $i -O $f.marked.bam -M $f.metrics"; done
