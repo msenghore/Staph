@@ -14,6 +14,14 @@ IFS='.' read -r -a f <<< "$i"; sbatch -p shared  -t 7200 --mem=4000 --wrap="samt
 for i in *.bam; do
 IFS='.' read -r -a f <<< "$i"; sbatch -p shared  -t 7200 --mem=4000 --wrap="samtools sort $i -o $f.s.bam"; done
 
+## For each bam file call snps using bcftools and store for later (Choose your filter parameters)
+for i in *f.s.bam; do
+  IFS='.' read -r -a f <<< "$i"
+  bcftools mpileup -Ou -f <reference.fa> $i | bcftools call -cv -Ov -o $f_confirmed_snps.vcf
+  bcftools view -M2 -i '%QUAL>=20' $f_confirmed_snps.vcf > $f_confirmed_snps.vcf
+done  
+
+
 ### Remove reads under 30 bases long:
 #step 1: 
 for i in *.sam; do IFS='.' read -r -a f <<< "$i"; echo "samtools view -h $f.s.bam | awk 'length($10) > 30 || $1 ~ /^@/'  | samtools view -bS > $f.s.f.bam"; done > Drop_under30base_records.txt
@@ -36,7 +44,7 @@ IFS='.' read -r -a f <<< "$i"; sbatch -p shared  -t 7200 --mem=4000 --wrap="gatk
 
 #Perform Base recalibration
 for i in *.marked.bam; do
-IFS='.marked' read -r -a f <<< "$i"; sbatch -p shared  -t 7200 --mem=4000 --wrap="gatk BaseRecalibrator -I $i -R Citrobacter_rodentium_ICC168.fasta --known-sites $i_confirmed_snps.vcf -O $f.recal.table"; done
+IFS='.marked' read -r -a f <<< "$i"; sbatch -p shared  -t 7200 --mem=4000 --wrap="gatk BaseRecalibrator -I $i -R Citrobacter_rodentium_ICC168.fasta --known-sites $f_confirmed_snps.vcf -O $f.recal.table"; done
 
 #Apply Base recalibration
 for i in *marked.bam; do
