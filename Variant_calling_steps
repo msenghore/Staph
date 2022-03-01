@@ -33,3 +33,12 @@ IFS='.' read -r -a f <<< "$i"; sbatch -p shared  -t 7200 --mem=4000 --wrap="samt
 #Mark duplicates in the sorted bam files with read groups assigned
 for i in *rg.q30.bam; do
 IFS='.' read -r -a f <<< "$i"; sbatch -p shared  -t 7200 --mem=4000 --wrap="gatk MarkDuplicates -I $i -O $f.marked.bam -M $f.metrics"; done
+
+#Perform Base recalibration
+for i in *.marked.bam; do
+IFS='.marked' read -r -a f <<< "$i"; sbatch -p shared  -t 7200 --mem=4000 --wrap="gatk BaseRecalibrator -I $i -R Citrobacter_rodentium_ICC168.fasta --known-sites $i_confirmed_snps.vcf -O $f.recal.table"; done
+
+#Apply Base recalibration
+for i in *marked.bam; do
+IFS='.marked' read -r -a f <<< "$i"; sbatch -p shared  -t 7000 --mem=4000 --wrap="gatk ApplyBQSR -R Citrobacter_rodentium_ICC168.fasta -I $i --bqsr-recal-file $f.recal.table -O $f.analysis.ready.bam"; done
+
