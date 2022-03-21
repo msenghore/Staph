@@ -1,0 +1,15 @@
+cd /n/holylfs05/LABS/hanage_lab/Lab/holyscratch01/madikay/staph/2015/reads
+
+### Take all the unique IDs and store in a text file
+for i in *gz; do IFS='S' read -r -a f <<< "$i"; echo $f ; done | uniq > unique_samples.list
+###Create a directory for merged reads
+mkdir ../merged_reads
+
+## loop through the read file list and concatenate all forward and reverse reads in seperate files
+## First check that files tally,
+while read i; do echo "$i R1" ; ls $i*R1*; echo "$i R2" ; ls $i*R2*; done < unique_samples.list > merger_QC.list
+
+### Then merge the files using the cat command
+while read i; do sbatch -p serial_requeue  -t 7200 --mem=4000 --wrap="cat $i*R1* > ../merged_reads/$i.R1.fq.gz"; sbatch -p serial_requeue  -t 7200 --mem=4000 --wrap="cat $i*R2* > ../merged_reads/$i.R2.fq.gz"; done < unique_samples.list 
+
+
