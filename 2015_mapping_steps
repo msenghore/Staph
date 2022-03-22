@@ -12,4 +12,45 @@ while read i; do echo "$i R1" ; ls $i*R1*; echo "$i R2" ; ls $i*R2*; done < uniq
 ### Then merge the files using the cat command
 while read i; do sbatch -p serial_requeue  -t 7200 --mem=4000 --wrap="cat $i*R1* > ../merged_reads/$i.R1.fq.gz"; sbatch -p serial_requeue  -t 7200 --mem=4000 --wrap="cat $i*R2* > ../merged_reads/$i.R2.fq.gz"; done < unique_samples.list 
 
+##### QC steps
+## Check read file sizes
+cd ../merged_reads/
+ls -lrt
+module load fastqc/0.11.8-fasrc01
+module load Java/1.8
+
+# Run fastqc on all raw reads
+module load  fastqc/0.11.8-fasrc01
+for i in *.fq.gz; do sbatch -p shared  -t 7000 --mem=4000 --wrap="fastqc $i"; done
+mkdir ../fastqc/
+mv *html ../fastqc/
+
+# map reads to reference using bwa
+module load bwa/0.7.17-fasrc01
+module load bcftools/1.5-fasrc02
+module load samtools/1.5-fasrc02
+
+# Map reads to reference
+bwa index CP000730_USA300_TCH1516.fasta
+for i in *R1.fq.gz; do IFS='.' read -r -a f <<< "$i"; sbatch -p shared  -t 7200 --mem=4000 --wrap="bwa mem -p CP000730_USA300_TCH1516.fasta $i > $f.sam"; done
+
+### Convert sam to bam and sort
+for i in *.bam; do IFS='.' read -r -a f <<< "$i"; sbatch -p shared  -t 7000 --mem=4000 --wrap="samtools view -bS $i | samtools sort -o $f.bam"; done
+
+### run qualimap on bam files
+#for i in *.bam; do sbatch -p shared  -t 7000 --mem=4000 --wrap="qualimap bamqc -bam $i -outdir ../qualimap/"; done
+for i in *.bam; do IFS='.' read -r -a f <<< "$i";sbatch -p shared  -t 7000 --mem=4000 --wrap="qualimap bamqc -bam $i -outdir ../qualimap/$f"; done
+
+### Load multiqc and run it
+salloc -p test -c 1 -t 00-01:00 --mem=4000
+which singularity
+singularity --version
+singularity pull docker://ewels/multiqc:1.9
+singularity exec --cleanenv /n/singularity_images/informatics/multiqc/multiqc_1.9.sif multiqc
+history | tail
+
+
+
+
+
 
