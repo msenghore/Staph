@@ -49,6 +49,13 @@ singularity pull docker://ewels/multiqc:1.9
 singularity exec --cleanenv /n/singularity_images/informatics/multiqc/multiqc_1.9.sif multiqc
 history | tail
 
+### Filter the bam files
+### 1) Rename bam files
+for i in *.bam; do IFS='.' read -r -a f <<< "$i"; mv $i ${f[0]}_${f[1]}.bam; done
+### Drop reads under 30 bases
+for i in *.bam; do IFS='.' read -r -a f <<< "$i"; echo "samtools view -h $i | awk 'length($10) > 30 || $1 ~ /^@/'  | samtools view -bS > $f.sf.bam"; done > Drop_under30base_records.txt
+
+
 
 
 
