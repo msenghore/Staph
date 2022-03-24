@@ -51,7 +51,12 @@ history | tail
 
 ### Filter the bam files
 ### 1) Rename bam files
-for i in *.bam; do IFS='.' read -r -a f <<< "$i"; mv $i ${f[0]}_${f[1]}.bam; done
+for i in *.bam; do IFS='_' read -r -a f <<< "$i"; mv $i ${f[0]}_${f[1]}.bam; done
+
+for i in *.bam; do sbatch -p shared  -t 7000 --mem=16000 -c 4 --wrap="sh ../scripts/Run_gatk_preprocessing.sh $i ../merged_reads/CP000730_USA300_TCH1516.fasta"
+
+
+###########################################################################################################
 ### Drop reads under 30 bases
 for i in *.bam; do IFS='.' read -r -a f <<< "$i"; echo "samtools view -h $i | awk 'length($10) > 30 || \$1 ~ /^@/'  | samtools view -bS > $f.sf.bam"; done > Drop_under30base_records.txt
 while read -r i; do sbatch -p shared  -t 7200 --mem=4000 --wrap="$i"; done < "Drop_under30base_records.txt"
