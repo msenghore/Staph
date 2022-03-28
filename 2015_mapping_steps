@@ -53,6 +53,7 @@ history | tail
 ### 1) Rename bam files
 for i in *.bam; do IFS='_' read -r -a f <<< "$i"; mv $i ${f[0]}_${f[1]}.bam; done
 
+###Run the script for variant calling up to consensus
 for i in *.bam; do sbatch -p shared  -t 7000 --mem=16000 -c 4 --wrap="sh ../scripts/Run_gatk_preprocessing.sh $i ../merged_reads/CP000730_USA300_TCH1516.fasta"
 
 
