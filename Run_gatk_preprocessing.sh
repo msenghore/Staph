@@ -48,3 +48,6 @@ cat $2 | bcftools consensus $f.final.snps.bcf.gz > ../consensus/$f.consensus.fas
 
 #### Rename fasta file (Reference ID will vary)
 sed -i "s/>CP000730\.1/>$f/g" ../consensus/$f.consensus.fasta; done
+
+
+
