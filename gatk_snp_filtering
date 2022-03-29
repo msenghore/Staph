@@ -1,0 +1,8 @@
+#### Do a joint calling from GATK using the g.vcf files
+
+for i in *g.vcf ; do IFS='.' read -r -a f <<< "$i"; echo -e $f'\t'$i; done > cohort.sample_map.txt
+#(Manually remove ID's that failed mapping. See multiQC output for coverage below 25X.)
+
+gatk --java-options "-Xmx4g -Xms4g" GenomicsDBImport --genomicsdb-workspace-path GenomicsDB --batch-size 50 -L CP000730.1:1-2872915 --sample-name-map cohort_filtered.sample_map.txt
+gatk --java-options "-Xmx4g" GenotypeGVCFs -R ../merged_reads/CP000730_USA300_TCH1516.fasta -V gendb://GenomicsDB -O Staph_2015_gakt_calls.vcf
+
