@@ -1,8 +1,15 @@
 #### Do a joint calling from GATK using the g.vcf files
 
+
 for i in *g.vcf ; do IFS='.' read -r -a f <<< "$i"; echo -e $f'\t'$i; done > cohort.sample_map.txt
 #(Manually remove ID's that failed mapping. See multiQC output for coverage below 25X.)
 
 gatk --java-options "-Xmx4g -Xms4g" GenomicsDBImport --genomicsdb-workspace-path GenomicsDB --batch-size 50 -L CP000730.1:1-2872915 --sample-name-map cohort_filtered.sample_map.txt
 gatk --java-options "-Xmx4g" GenotypeGVCFs -R ../merged_reads/CP000730_USA300_TCH1516.fasta -V gendb://GenomicsDB -O Staph_2015_gakt_calls.vcf
 
+### Redo everything, but instead filter the g.vcf from haplotype caller before doing joint call
+### Step 1 filter all outputs from haplotype caller to only include ALT-majority, Q100, DP20 sites
+for i in *.g.vcf; do IFS='.' read -r -a f <<< "$i"; bcftools filter -i 'AD[0]/DP < 0.2  && QUAL>100 && DP>20' $i > $f.g.q100.DP20.snps.vcf ; gatk IndexFeatureFile -F $f.g.q100.DP20.snps.vcf; done
+
+for i in *g.q100.DP20.snps.vcf ; do IFS='.' read -r -a f <<< "$i"; echo -e $f'\t'$i; done > cohort.Q100.D2P20.txt
+gatk --java-options "-Xmx4g -Xms4g" GenomicsDBImport --genomicsdb-workspace-path Genomics.Q100.DP20DB --batch-size 50 -L CP000730.1:1-2872915 --sample-name-map cohort.Q100.D2P20.txt
