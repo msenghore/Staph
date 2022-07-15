@@ -1,0 +1,13 @@
+## Copy IDs from the metadata and create a file IDs.list
+## Grep the read files corresponding to each ID into new directory
+while read i; do ln -s ../merged_reads/$i*gz .; done < ID.list
+ls | grep gz | xargs -n 2 > reads.list
+
+ST87
+while read i ; do IFS=' ' read -r -a f <<< "$i"; n=$(echo $i | cut -c1-7); sbatch -p shared  -t 7000 -c 6 --mem=24000 --wrap="bwa mem GCA_000562835.1_Stap_aure_H48052_V1_genomic.fasta ${f[0]} ${f[1]} > $n.sam"; done < reads.list
+
+ST5
+while read i ; do IFS=' ' read -r -a f <<< "$i"; n=$(echo $i | cut -c1-7); sbatch -p shared  -t 7000 -c 6 --mem=24000 --wrap="bwa mem GCA_000607605.1_Stap_aure_DAR3581_V1_genomic.fasta ${f[0]} ${f[1]} > $n.sam"; done < reads.list
+
+module load bwa
+
