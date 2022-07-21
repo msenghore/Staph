@@ -1,0 +1,17 @@
+#### Reference genome: MRSA N315 BA000017.4
+#### Citation https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(00)04403-2/fulltext https://doi.org/10.1016/S0140-6736(00)04403-2
+
+### Steps for mapping to reference using bwa
+module load Java
+module load gatk
+module load samtools
+module load bwa 
+bwa index BA000017.4.fasta
+samtools faidx BA000017.4.fasta
+gatk CreateSequenceDictionary -R BA000017.4.fasta
+
+### Create a text file with read pairs listed
+ls | grep fq.gz | xargs -n 2 > read_pairs.list
+
+### Use a wrapper to map all samples with bwa
+while read i; do f=$(echo $i | cut -b 1-7);  sbatch -p shared  -t 7000 --mem=4000 --wrap="bwa mem BA000017.4.fasta $i > $f.sam"; done < read_pairs.list
