@@ -1,6 +1,6 @@
 ### Usage: Run_gatk_preprocessing.sh <sorted bam> <reference>
 ###: Author Madikay Senghore
-###: Synposis: given a bam file. and a reference file, run the gatk snp calling pipeline
+###: Synposis: given a sam file. and a reference file, run the gatk snp calling pipeline
 ###: Date Wed 23 Mar 2022
 
 ### Load modules
@@ -10,13 +10,17 @@ module load Java
 module load gatk
 
 i=$1
+ref=$2
 IFS='.' read -r -a f <<< "$i"
 
 ### ### Drop reads under 30 bases
-#samtools view -h $i | awk 'length($10) > 30 || $1 ~ /^@/'  | samtools view -bS > $f.sf.bam
+samtools view -h $i | awk 'length($10) > 30 || $1 ~ /^@/'  | samtools view -bS > $f.f.bam
+samtools sort $f.f.bam -o $f.sf.bam
 
 ## classical mpileup and filter for know variant sites
-bcftools view -M2 -v snps -i '%QUAL>=20' $f.pile.vcf > $f.confirmed_snps.vcf
+bcftools mpileup -Ov -o $f.pile.vcf -f $ref $f.sf.bam
+bcftools call -mv -Ov $f.pile.vcf -o $f.calls.vcf 
+bcftools view -M2 -v snps -i '%QUAL>=50' $f.calls.vcf > $f.confirmed_snps.vcf
 gatk IndexFeatureFile -F $f.confirmed_snps.vcf
 
 ## Use gatk to add read groups to bam files
@@ -42,12 +46,9 @@ gatk --java-options "-Xmx4g" GenotypeGVCFs -R $2 -V $f.g.vcf -O $f.genotyped.vcf
 
 
 ### Use bcftools to filter biallelic SNP sites  where ALT allele is majority  (Threshold 80%) 
-bcftools filter -i 'AD[0]/DP < 0.2  && QUAL>100 && DP>20' $f.genotyped.vcf | bcftools view -m2 -M2 -v snps -Ob -o $f.final.snps.bcf.gz
-bcftools index $f.final.snps.bcf.gz
-cat $2 | bcftools consensus $f.final.snps.bcf.gz > ../consensus/$f.consensus.fasta
+#bcftools filter -i 'AD[0]/DP < 0.2  && QUAL>100 && DP>20' $f.genotyped.vcf | bcftools view -m2 -M2 -v snps -Ob -o $f.final.snps.bcf.gz
+#bcftools index $f.final.snps.bcf.gz
+#cat $2 | bcftools consensus $f.final.snps.bcf.gz > ../consensus/$f.consensus.fasta
 
 #### Rename fasta file (Reference ID will vary)
-sed -i "s/>CP000730\.1/>$f/g" ../consensus/$f.consensus.fasta; done
-
-
-
+#sed -i "s/>CP000730\.1/>$f/g" ../consensus/$f.consensus.fasta; done
