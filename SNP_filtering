@@ -1,5 +1,5 @@
 bcftools filter -i 'QUAL>100' ST8_all_gakt_calls.vcf |  bcftools view -M 2 -v snps -o ST8_biallelic.vcf
 
-bedtools intersect -v -a ST8_biallelic.vcf -b Recombinations_bedfile.txt Bedfile_Remove_repeat_is_prophage_50bp_no0verlap_regions.txt > ST8_biallelic_filtered.vcf
+bedtools intersect -v -a -header ST8_biallelic.vcf -b Recombinations_bedfile.txt Bedfile_Remove_repeat_is_prophage_50bp_no0verlap_regions.txt > ST8_biallelic_filtered.vcf
 
-
+perl ~/Projects/Perl_scripts/GVCF_snp_extract_to_longtbl_S.aureus.pl ST8_biallelic_filtered.vcf > ST8_snp_tbl.csv
