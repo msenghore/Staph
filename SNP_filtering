@@ -1,0 +1,2 @@
+bcftools view ST8_all_gakt_calls.vcf -M 2 -v snps -o ST8_biallelic.vcf
+
